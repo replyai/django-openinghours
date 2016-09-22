@@ -20,6 +20,7 @@ class OpeningHoursEditView(DetailView, UpdateView):
     """
     model = get_premises_model()
     template_name = "openinghours/edit_base.html"
+    include_form_actions = True
 
     def form_prefix(self, day_n, slot_n):
         """Form prefix made up of day number and slot number.
@@ -85,6 +86,7 @@ class OpeningHoursEditView(DetailView, UpdateView):
         context['days'] = days
         context['two_sets'] = two_sets
         context['location'] = self.object
+        context['include_form_actions'] = self.include_form_actions
         return context
 
     def get(self, request, *args, **kwargs):
