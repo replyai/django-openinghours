@@ -64,23 +64,23 @@
     {% block form-fields %}
         {% csrf_token %}
         {% for day in days %}
-        <div class="day">
-            <span class="set1">
-                <span class="weekday text-muted text-right">
-                {{ day.name }}</span>
-                {{ day.slot1.opens }} - {{ day.slot1.shuts }}</span>
-            <span class="set2"><span class="small text-muted">and</span>
-                {{ day.slot2.opens }} - {{ day.slot2.shuts }}</span>
-            <label class="closed-label">
-                <input type="checkbox" class="closed" id="closed{{ day.number }}" {% if day.closed %}checked{% endif %}>
-                Closed
-            </label>
-            {% if forloop.first %}
-            <button class="btn btn-default btn-xs" id="repeat">
-                Apply to all days
-            </button>
-            {% endif %}
-        </div>
+            <div class="day">
+                <span class="set1">
+                    <span class="weekday text-muted text-right">
+                    {{ day.name }}</span>
+                    {{ day.slot1.opens }} <span class="delimiter">-</span> {{ day.slot1.shuts }}</span>
+                <span class="set2"><span class="small text-muted">and</span>
+                    {{ day.slot2.opens }} <span class="delimiter">-</span> {{ day.slot2.shuts }}</span>
+                <label class="closed-label">
+                    <input type="checkbox" class="closed" id="closed{{ day.number }}" {% if day.closed %}checked{% endif %}>
+                    Closed
+                </label>
+                {% if forloop.first %}
+                <button class="btn btn-default btn-xs" id="repeat">
+                    Apply to all days
+                </button>
+                {% endif %}
+            </div>
         {% endfor %}
         <p>
             <label class="two-sets-label">

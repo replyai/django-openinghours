@@ -94,7 +94,7 @@ class OpeningHoursEditView(DetailView, UpdateView):
         context = self.get_context_data(object=self.object)
         return self.render_to_response(context)
 
-    def post(self, request, *args, **kwargs):
+    def process_post(self, request):
         """
         Clean the data and save opening hours in the database.
         Old opening hours are purged before new ones are saved.
@@ -120,5 +120,8 @@ class OpeningHoursEditView(DetailView, UpdateView):
                 if opens != shuts:
                     OpeningHours(from_hour=opens, to_hour=shuts,
                                  company=location, weekday=day).save()
+
+    def post(self, request, *args, **kwargs):
+        self.process_post(request)
         success_url = self.get_success_url()
         return HttpResponseRedirect(success_url)

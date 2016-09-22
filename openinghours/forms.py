@@ -7,17 +7,24 @@ UX supports up to 2 sets of opening hours per day optimised for common stories:
 """
 
 from django import forms
-from datetime import time
+from datetime import time, datetime
+from .app_settings import TIME_FORMAT
 
 
 def str_to_time(s):
     """ Turns strings like '08:30' to time objects """
-    return time(*[int(x) for x in s.split(':')])
+    str_format = '%H:%M'
+    if TIME_FORMAT == 12:
+        str_format = '%I:%M %p'
+    return datetime.strptime(s, str_format).time()
 
 
 def time_to_str(t):
     """ Turns time objects to strings like '08:30' """
-    return t.strftime('%H:%M')
+    time_format = '%H:%M'
+    if TIME_FORMAT == 12:
+        time_format = '%I:%M %p'
+    return t.strftime(time_format)
 
 
 def time_choices():
@@ -26,8 +33,16 @@ def time_choices():
     times = []
     for h in hours:
         hour = str(h).zfill(2)
-        times.append(hour+':00')
-        times.append(hour+':30')
+        cur_time = hour+':00'
+        if TIME_FORMAT != 24:
+            cur_time = datetime.strptime(cur_time, "%H:%M")
+            cur_time = cur_time.strftime("%I:%M %p")
+        times.append(cur_time)
+        cur_time = hour + ':30'
+        if TIME_FORMAT != 24:
+            cur_time = datetime.strptime(cur_time, "%H:%M")
+            cur_time = cur_time.strftime("%I:%M %p")
+        times.append(cur_time)
     return list(zip(times, times))
 
 TIME_CHOICES = time_choices()
