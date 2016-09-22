@@ -1,13 +1,17 @@
-from openinghours.models import OpeningHours, WEEKDAYS
-from openinghours.forms import Slot, time_to_str, str_to_time
-from openinghours.utils import get_premises_model
-from django.shortcuts import render, redirect, get_object_or_404
-from django.views.generic import DetailView
 from collections import OrderedDict
 
+from django.http import HttpResponseRedirect
+from django.utils.encoding import force_text
+from django.views.generic import DetailView, UpdateView
 
-class OpeningHoursEditView(DetailView):
-    """Powers editing UI supporting up to 2 time slots (sets) per day.
+from openinghours.forms import Slot, time_to_str, str_to_time
+from openinghours.models import OpeningHours, WEEKDAYS
+from openinghours.utils import get_premises_model
+
+
+class OpeningHoursEditView(DetailView, UpdateView):
+    """
+    Powers editing UI supporting up to 2 time slots (sets) per day.
 
     Models still support more slots via shell or admin UI.
     This UI will delete and not recreate anything above 2 daily slots.
@@ -25,35 +29,22 @@ class OpeningHoursEditView(DetailView):
         """
         return "day%s_%s" % (day_n, slot_n)
 
-    def post(self, request, pk):
-        """ Clean the data and save opening hours in the database.
-        Old opening hours are purged before new ones are saved.
+    def get_success_url(self):
         """
-        location = self.get_object()
-        # open days, disabled widget data won't make it into request.POST
-        present_prefixes = [x.split('-')[0] for x in request.POST.keys()]
-        day_forms = OrderedDict()
-        for day_no, day_name in WEEKDAYS:
-            for slot_no in (1, 2):
-                prefix = self.form_prefix(day_no, slot_no)
-                # skip closed day as it would be invalid form due to no data
-                if prefix not in present_prefixes:
-                    continue
-                day_forms[prefix] = (day_no, Slot(request.POST, prefix=prefix))
+        Returns the supplied success URL.
+        """
+        if not self.success_url:
+            self.success_url = self.request.path_info
+        if self.success_url:
+            # Forcing possible reverse_lazy evaluation
+            url = force_text(self.success_url)
+        else:
+            url = self.request.path_info
+        return url
 
-        if all([day_form[1].is_valid() for pre, day_form in day_forms.items()]):
-            OpeningHours.objects.filter(company=location).delete()
-            for prefix, day_form in day_forms.items():
-                day, form = day_form
-                opens, shuts = [str_to_time(form.cleaned_data[x])
-                                for x in ('opens', 'shuts')]
-                if opens != shuts:
-                    OpeningHours(from_hour=opens, to_hour=shuts,
-                                 company=location, weekday=day).save()
-        return redirect(request.path_info)
-
-    def get(self, request, pk):
-        """ Initialize the editing form
+    def get_context_data(self, **kwargs):
+        """
+        Initialize the editing form
 
         1. Build opening_hours, a lookup dictionary to populate the form
            slots: keys are day numbers, values are lists of opening
@@ -63,11 +54,11 @@ class OpeningHoursEditView(DetailView):
            opening_hours to end up with exactly 2 slots even if it's
            just None values.
         """
-        location = self.get_object()
+        context = super(OpeningHoursEditView, self).get_context_data(**kwargs)
         two_sets = False
         closed = None
         opening_hours = {}
-        for o in OpeningHours.objects.filter(company=location):
+        for o in OpeningHours.objects.filter(company=self.object):
             opening_hours.setdefault(o.weekday, []).append(o)
         days = []
         for day_no, day_name in WEEKDAYS:
@@ -91,8 +82,41 @@ class OpeningHoursEditView(DetailView):
                 'slot2': Slot(prefix=self.form_prefix(day_no, 2), initial=ini2),
                 'closed': closed
             })
-        return render(request, self.template_name, {
-            'days': days,
-            'two_sets': two_sets,
-            'location': location,
-        })
+        context['days'] = days
+        context['two_sets'] = two_sets
+        context['location'] = self.object
+        return context
+
+    def get(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        context = self.get_context_data(object=self.object)
+        return self.render_to_response(context)
+
+    def post(self, request, *args, **kwargs):
+        """
+        Clean the data and save opening hours in the database.
+        Old opening hours are purged before new ones are saved.
+        """
+        location = self.get_object()
+        # open days, disabled widget data won't make it into request.POST
+        present_prefixes = [x.split('-')[0] for x in request.POST.keys()]
+        day_forms = OrderedDict()
+        for day_no, day_name in WEEKDAYS:
+            for slot_no in (1, 2):
+                prefix = self.form_prefix(day_no, slot_no)
+                # skip closed day as it would be invalid form due to no data
+                if prefix not in present_prefixes:
+                    continue
+                day_forms[prefix] = (day_no, Slot(request.POST, prefix=prefix))
+
+        if all([day_form[1].is_valid() for pre, day_form in day_forms.items()]):
+            OpeningHours.objects.filter(company=location).delete()
+            for prefix, day_form in day_forms.items():
+                day, form = day_form
+                opens, shuts = [str_to_time(form.cleaned_data[x])
+                                for x in ('opens', 'shuts')]
+                if opens != shuts:
+                    OpeningHours(from_hour=opens, to_hour=shuts,
+                                 company=location, weekday=day).save()
+        success_url = self.get_success_url()
+        return HttpResponseRedirect(success_url)

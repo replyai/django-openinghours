@@ -1,6 +1,7 @@
 import datetime
 from django.conf import settings
 from django.utils import timezone
+
 try:
     from threadlocals.threadlocals import get_current_request
 except ImportError:
@@ -27,6 +28,7 @@ def get_premises_model():
                                    " model '%s' that has not been installed"
                                    % PREMISES_MODEL)
     return premises_model
+
 
 Company = get_premises_model()
 
@@ -87,23 +89,19 @@ def is_open(location, now=None):
     for oh in ohs:
         is_open = False
         # start and end is on the same day
-        if (oh.weekday == now.isoweekday() and
-                oh.from_hour <= now_time and
-                now_time <= oh.to_hour):
+        if oh.weekday == now.isoweekday() and oh.from_hour <= now_time <= oh.to_hour:
             is_open = oh
 
         # start and end are not on the same day and we test on the start day
         if (oh.weekday == now.isoweekday() and
-                oh.from_hour <= now_time and
+                    oh.from_hour <= now_time and
                 ((oh.to_hour < oh.from_hour) and
-                    (now_time < datetime.time(23, 59, 59)))):
+                     (now_time < datetime.time(23, 59, 59)))):
             is_open = oh
 
         # start and end are not on the same day and we test on the end day
-        if (oh.weekday == (now.isoweekday() - 1) % 7 and
-                oh.from_hour >= now_time and
-                oh.to_hour >= now_time and
-                oh.to_hour < oh.from_hour):
+        if oh.weekday == (now.isoweekday() - 1) % 7 and \
+                oh.from_hour >= now_time and now_time <= oh.to_hour < oh.from_hour:
             is_open = oh
             # print " 'Special' case after midnight", oh
 
@@ -112,15 +110,18 @@ def is_open(location, now=None):
     return False
 
 
-def next_time_open(location):
+def next_time_open(location, tzinfo=None):
     """
     Returns the next possible opening hours object, or (False, None)
     if location is currently open or there is no such object
     I.e. when is the company open for the next time?
     """
+    if settings.USE_TZ and tzinfo is None:
+        import pytz
+        tzinfo = pytz.timezone(settings.TIME_ZONE)
+
     if not is_open(location):
         now = get_now()
-        now_time = datetime.time(now.hour, now.minute, now.second)
         found_opening_hours = False
         for i in range(8):
             l_weekday = (now.isoweekday() + i) % 8
@@ -138,7 +139,8 @@ def next_time_open(location):
                                                 future_now.day,
                                                 oh.from_hour.hour,
                                                 oh.from_hour.minute,
-                                                oh.from_hour.second)
+                                                oh.from_hour.second,
+                                                tzinfo)
                     if tmp_now < now:
                         tmp_now = now  # be sure to set the bound correctly...
                     if is_open(location, now=tmp_now):
