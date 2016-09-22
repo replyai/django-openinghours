@@ -118,7 +118,11 @@ def next_time_open(location, tzinfo=None):
     """
     if settings.USE_TZ and tzinfo is None:
         import pytz
-        tzinfo = pytz.timezone(settings.TIME_ZONE)
+        if hasattr(location, settings.OPENINGHOURS_PREMISES_MODEL_TIMEZONE_FIELD):
+            tz_name = getattr(location, settings.OPENINGHOURS_PREMISES_MODEL_TIMEZONE_FIELD)
+        else:
+            tz_name = settings.TIME_ZONE
+        tzinfo = pytz.timezone(tz_name)
 
     if not is_open(location):
         now = get_now()

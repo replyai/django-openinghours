@@ -55,6 +55,7 @@ class OpeningHoursEditView(DetailView, UpdateView):
            opening_hours to end up with exactly 2 slots even if it's
            just None values.
         """
+        self.object = self.get_object()
         context = super(OpeningHoursEditView, self).get_context_data(**kwargs)
         two_sets = False
         closed = None
@@ -90,7 +91,6 @@ class OpeningHoursEditView(DetailView, UpdateView):
         return context
 
     def get(self, request, *args, **kwargs):
-        self.object = self.get_object()
         context = self.get_context_data(object=self.object)
         return self.render_to_response(context)
 
