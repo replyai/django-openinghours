@@ -1,4 +1,6 @@
 import datetime
+
+import pytz
 from django.conf import settings
 from django.utils import timezone
 
@@ -33,14 +35,23 @@ def get_premises_model():
 Company = get_premises_model()
 
 
+def to_timezone(time, tzinfo):
+    if tzinfo is None:
+        return time
+    if isinstance(tzinfo, str):
+        tzinfo = pytz.timezone(tzinfo)
+    if time.tzinfo is None:
+        time = time.utcnow().replace(tzinfo=timezone.UTC)
+    return time.astimezone(tzinfo)
+
+
 def get_now(tzinfo=None):
     """
     Allows to access global request and read a timestamp from query.
     """
     if not get_current_request:
         now = timezone.now()
-        if tzinfo:
-            now.replace(tzinfo=tzinfo)
+        now = to_timezone(now, tzinfo)
         return now
     request = get_current_request()
     if request:
@@ -49,8 +60,7 @@ def get_now(tzinfo=None):
             return datetime.datetime.strptime(openinghours_now, '%Y%m%d%H%M%S')
 
     now = timezone.now()
-    if tzinfo:
-        now.replace(tzinfo=tzinfo)
+    now = to_timezone(now, tzinfo)
     return now
 
 
