@@ -33,18 +33,25 @@ def get_premises_model():
 Company = get_premises_model()
 
 
-def get_now():
+def get_now(tzinfo=None):
     """
     Allows to access global request and read a timestamp from query.
     """
     if not get_current_request:
-        return timezone.now()
+        now = timezone.now()
+        if tzinfo:
+            now.replace(tzinfo=tzinfo)
+        return now
     request = get_current_request()
     if request:
         openinghours_now = request.GET.get('openinghours-now')
         if openinghours_now:
             return datetime.datetime.strptime(openinghours_now, '%Y%m%d%H%M%S')
-    return timezone.now()
+
+    now = timezone.now()
+    if tzinfo:
+        now.replace(tzinfo=tzinfo)
+    return now
 
 
 def get_closing_rule_for_now(location):
@@ -69,13 +76,13 @@ def has_closing_rule_for_now(location):
     return cr.count()
 
 
-def is_open(location, now=None):
+def is_open(location, now=None, tzinfo=None):
     """
     Is the company currently open? Pass "now" to test with a specific
     timestamp. Can be used stand-alone or as a helper.
     """
     if now is None:
-        now = get_now()
+        now = get_now(tzinfo)
 
     if has_closing_rule_for_now(location):
         return False
@@ -125,7 +132,7 @@ def next_time_open(location, tzinfo=None):
         tzinfo = pytz.timezone(tz_name)
 
     if not is_open(location):
-        now = get_now()
+        now = get_now(tzinfo)
         found_opening_hours = False
         for i in range(8):
             l_weekday = (now.isoweekday() + i) % 8
