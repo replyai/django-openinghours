@@ -23,7 +23,10 @@ if PREMISES_MODEL == 'openinghours.Company':
     ]
 
 class Migration(migrations.Migration):
-    dependencies = []
+    dependencies = [
+        (PREMISES_MODEL.split('.')[0], '__latest__'),
+
+    ]
     operations = initial_operations + [
         migrations.CreateModel(
             name='ClosingRules',
