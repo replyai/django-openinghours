@@ -26,19 +26,17 @@ if PREMISES_MODEL == 'openinghours.Company':
 class Migration(migrations.Migration):
     dependencies = []
     if PREMISES_MODEL != DEFAULT_MODEL:
-        dependencies.append((PREMISES_MODEL.split('.')[0], '__latest__'), )
-
+        dependencies.append((PREMISES_MODEL.split('.')[0], '__latest__'),)
     operations = initial_operations + [
         migrations.CreateModel(
             name='ClosingRules',
             fields=[
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
-                ('start', models.DateTimeField(verbose_name='Start')),
-                ('end', models.DateTimeField(verbose_name='End')),
-                ('reason', models.TextField(null=True, verbose_name='Reason', blank=True)),
+                ('start', models.DateTimeField()),
+                ('end', models.DateTimeField()),
+                ('reason', models.TextField(null=True, blank=True)),
             ],
             options={
-                'ordering': ['start'],
                 'verbose_name': 'Closing Rule',
                 'verbose_name_plural': 'Closing Rules',
             },
@@ -47,9 +45,9 @@ class Migration(migrations.Migration):
             name='OpeningHours',
             fields=[
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
-                ('weekday', models.IntegerField(verbose_name='Weekday', choices=[(1, 'Monday'), (2, 'Tuesday'), (3, 'Wednesday'), (4, 'Thursday'), (5, 'Friday'), (6, 'Saturday'), (7, 'Sunday')])),
-                ('from_hour', models.TimeField(verbose_name='Opening')),
-                ('to_hour', models.TimeField(verbose_name='Closing')),
+                ('weekday', models.IntegerField(choices=[(1, 'Monday'), (2, 'Tuesday'), (3, 'Wednesday'), (4, 'Thursday'), (5, 'Friday'), (6, 'Saturday'), (7, 'Sunday')])),
+                ('from_hour', models.TimeField()),
+                ('to_hour', models.TimeField()),
                 ('company', models.ForeignKey(to=PREMISES_MODEL)),
             ],
             options={
