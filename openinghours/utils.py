@@ -64,6 +64,19 @@ def get_now(tzinfo=None):
     return now
 
 
+def as_timezone(dt, timezone_name):
+        return dt.astimezone(pytz.timezone(timezone_name))
+
+
+def apply_timezone(dt, timezone_name):
+    local_tz = pytz.timezone(timezone_name)
+    return local_tz.localize(dt)
+
+
+def construct_tz_aware_time(date_, time_, timezone_name):
+    return apply_timezone(datetime.datetime.combine(date_, time_), timezone_name)
+
+
 def get_closing_rule_for_now(location):
     """
     Returns QuerySet of ClosingRules that are currently valid

@@ -1,12 +1,17 @@
+import pytz
 from collections import OrderedDict
 
+from datetime import datetime
 from django.http import HttpResponseRedirect
 from django.utils.encoding import force_text
 from django.views.generic import DetailView, UpdateView
 
 from openinghours.forms import Slot, time_to_str, str_to_time
-from openinghours.models import OpeningHours, WEEKDAYS
+from openinghours.models import OpeningHours, WEEKDAYS, ClosingRules
 from openinghours.utils import get_premises_model
+from .forms import ClosingRulesForm
+from .utils import construct_tz_aware_time
+from django.forms import modelformset_factory
 
 
 class OpeningHoursEditView(DetailView, UpdateView):
@@ -88,6 +93,9 @@ class OpeningHoursEditView(DetailView, UpdateView):
         context['two_sets'] = two_sets
         context['location'] = self.object
         context['include_form_actions'] = self.include_form_actions
+
+        formset = modelformset_factory(ClosingRules, ClosingRulesForm)
+        context['formset'] = formset
         return context
 
     def get(self, request, *args, **kwargs):
@@ -102,6 +110,7 @@ class OpeningHoursEditView(DetailView, UpdateView):
         location = self.get_object()
         # open days, disabled widget data won't make it into request.POST
         present_prefixes = [x.split('-')[0] for x in request.POST.keys()]
+
         day_forms = OrderedDict()
         for day_no, day_name in WEEKDAYS:
             for slot_no in (1, 2):
@@ -121,7 +130,26 @@ class OpeningHoursEditView(DetailView, UpdateView):
                     OpeningHours(from_hour=opens, to_hour=shuts,
                                  company=location, weekday=day).save()
 
+        # assume that forms are validated
+        ClosingRulesFormSet = modelformset_factory(ClosingRules, ClosingRulesForm)
+        formset = ClosingRulesFormSet(request.POST)
+        for form in formset.forms:
+            if form.is_valid():
+                closing_rule = form.save(commit=False)
+                closing_rule.start = construct_tz_aware_time(form.cleaned_data['start_date'],
+                                                                  form.cleaned_data['start_time'],
+                                                                  location.timezone)
+                closing_rule.end = construct_tz_aware_time(form.cleaned_data['end_date'],
+                                                                  form.cleaned_data['end_time'],
+                                                                  location.timezone)
+                closing_rule.company = location
+                closing_rule.save()
+            elif form.is_bound:
+                ClosingRules.objects.filter(pk=form.instance.pk).delete()
+
     def post(self, request, *args, **kwargs):
         self.process_post(request)
         success_url = self.get_success_url()
         return HttpResponseRedirect(success_url)
+
+
