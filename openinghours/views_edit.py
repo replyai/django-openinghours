@@ -70,8 +70,7 @@ class OpeningHoursEditView(DetailView, UpdateView):
         days = []
         for day_no, day_name in WEEKDAYS:
             if day_no not in opening_hours.keys():
-                if opening_hours:
-                    closed = True
+                closed = True
                 ini1, ini2 = [None, None]
             else:
                 closed = False
@@ -93,9 +92,12 @@ class OpeningHoursEditView(DetailView, UpdateView):
         context['two_sets'] = two_sets
         context['location'] = self.object
         context['include_form_actions'] = self.include_form_actions
-
-        formset = modelformset_factory(ClosingRules, ClosingRulesForm)
-        context['formset'] = formset
+        closing_rules_queryset = ClosingRules.objects.filter(company=self.object.pk)
+        extra = 2
+        if closing_rules_queryset.count() == 0:
+            extra = 3
+        formset = modelformset_factory(ClosingRules, ClosingRulesForm, extra=extra)
+        context['formset'] = formset(queryset=closing_rules_queryset)
         return context
 
     def get(self, request, *args, **kwargs):
