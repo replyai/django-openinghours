@@ -16,23 +16,23 @@ WEEKDAYS = [
     (7, _("Sunday")),
 ]
 
-if PREMISES_MODEL == 'openinghours.Company':
-    @python_2_unicode_compatible
-    class Company(models.Model):
-        """
-        Default model for company premises, which can be
-        replaced using OPENINGHOURS_PREMISES_MODEL.
-        """
-        class Meta:
-            verbose_name = _('Company')
-            verbose_name_plural = _('Companies')
+@python_2_unicode_compatible
+class Company(models.Model):
+    """
+    Default model for company premises, which can be
+    replaced using OPENINGHOURS_PREMISES_MODEL.
+    """
+    class Meta:
+        verbose_name = _('Company')
+        verbose_name_plural = _('Companies')
+        swappable = 'OPENINGHOURS_PREMISES_MODEL'
 
-        name = models.CharField(_('Name'), max_length=100)
-        slug = models.SlugField(_('Slug'), unique=True)
-        logo = models.FileField(_('Logo'), upload_to='logo', null=True, blank=True)
+    name = models.CharField(_('Name'), max_length=100)
+    slug = models.SlugField(_('Slug'), unique=True)
+    logo = models.FileField(_('Logo'), upload_to='logo', null=True, blank=True)
 
-        def __str__(self):
-            return self.name
+    def __str__(self):
+        return self.name
 
 
 @python_2_unicode_compatible
