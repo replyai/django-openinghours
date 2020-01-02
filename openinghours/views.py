@@ -8,5 +8,5 @@ class CurrentlyOpenView(TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super(CurrentlyOpenView, self).get_context_data(**kwargs)
-        context['location'] = self.model.objects.first()
+        context["location"] = self.model.objects.first()
         return context

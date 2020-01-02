@@ -20,15 +20,17 @@ def get_premises_model():
     with developer friendly validation.
     """
     try:
-        app_label, model_name = PREMISES_MODEL.split('.')
+        app_label, model_name = PREMISES_MODEL.split(".")
     except ValueError:
-        raise ImproperlyConfigured("OPENINGHOURS_PREMISES_MODEL must be of the"
-                                   " form 'app_label.model_name'")
+        raise ImproperlyConfigured(
+            "OPENINGHOURS_PREMISES_MODEL must be of the" " form 'app_label.model_name'"
+        )
     premises_model = get_model(app_label=app_label, model_name=model_name)
     if premises_model is None:
-        raise ImproperlyConfigured("OPENINGHOURS_PREMISES_MODEL refers to"
-                                   " model '%s' that has not been installed"
-                                   % PREMISES_MODEL)
+        raise ImproperlyConfigured(
+            "OPENINGHOURS_PREMISES_MODEL refers to"
+            " model '%s' that has not been installed" % PREMISES_MODEL
+        )
     return premises_model
 
 
@@ -55,9 +57,9 @@ def get_now(tzinfo=None):
         return now
     request = get_current_request()
     if request:
-        openinghours_now = request.GET.get('openinghours-now')
+        openinghours_now = request.GET.get("openinghours-now")
         if openinghours_now:
-            return datetime.datetime.strptime(openinghours_now, '%Y%m%d%H%M%S')
+            return datetime.datetime.strptime(openinghours_now, "%Y%m%d%H%M%S")
 
     now = timezone.now()
     now = to_timezone(now, tzinfo)
@@ -65,7 +67,7 @@ def get_now(tzinfo=None):
 
 
 def as_timezone(dt, timezone_name):
-        return dt.astimezone(pytz.timezone(timezone_name))
+    return dt.astimezone(pytz.timezone(timezone_name))
 
 
 def apply_timezone(dt, timezone_name):
@@ -84,11 +86,11 @@ def get_closing_rule_for_now(location):
     now = get_now()
 
     if location:
-        return ClosingRules.objects.filter(company=location,
-                                           start__lte=now, end__gte=now)
+        return ClosingRules.objects.filter(
+            company=location, start__lte=now, end__gte=now
+        )
 
-    return Company.objects.first().closingrules_set.filter(start__lte=now,
-                                                           end__gte=now)
+    return Company.objects.first().closingrules_set.filter(start__lte=now, end__gte=now)
 
 
 def has_closing_rule_for_now(location):
@@ -123,15 +125,19 @@ def is_open(location, now=None, tzinfo=None):
             is_open = oh
 
         # start and end are not on the same day and we test on the start day
-        if (oh.weekday == now.isoweekday() and
-                    oh.from_hour <= now_time and
-                ((oh.to_hour < oh.from_hour) and
-                     (now_time < datetime.time(23, 59, 59)))):
+        if (
+            oh.weekday == now.isoweekday()
+            and oh.from_hour <= now_time
+            and ((oh.to_hour < oh.from_hour) and (now_time < datetime.time(23, 59, 59)))
+        ):
             is_open = oh
 
         # start and end are not on the same day and we test on the end day
-        if oh.weekday == (now.isoweekday() - 1) % 7 and \
-                oh.from_hour >= now_time and now_time <= oh.to_hour < oh.from_hour:
+        if (
+            oh.weekday == (now.isoweekday() - 1) % 7
+            and oh.from_hour >= now_time
+            and now_time <= oh.to_hour < oh.from_hour
+        ):
             is_open = oh
             # print " 'Special' case after midnight", oh
 
@@ -148,8 +154,11 @@ def next_time_open(location, tzinfo=None):
     """
     if settings.USE_TZ and tzinfo is None:
         import pytz
+
         if hasattr(location, settings.OPENINGHOURS_PREMISES_MODEL_TIMEZONE_FIELD):
-            tz_name = getattr(location, settings.OPENINGHOURS_PREMISES_MODEL_TIMEZONE_FIELD)
+            tz_name = getattr(
+                location, settings.OPENINGHOURS_PREMISES_MODEL_TIMEZONE_FIELD
+            )
         else:
             tz_name = settings.TIME_ZONE
         tzinfo = pytz.timezone(tz_name)
@@ -159,22 +168,23 @@ def next_time_open(location, tzinfo=None):
         found_opening_hours = False
         for i in range(8):
             l_weekday = (now.isoweekday() + i) % 8
-            ohs = OpeningHours.objects.filter(company=location,
-                                              weekday=l_weekday
-                                              ).order_by('weekday',
-                                                         'from_hour')
+            ohs = OpeningHours.objects.filter(
+                company=location, weekday=l_weekday
+            ).order_by("weekday", "from_hour")
 
             if ohs.count():
                 for oh in ohs:
                     future_now = now + datetime.timedelta(days=i)
                     # same day issue
-                    tmp_now = datetime.datetime(future_now.year,
-                                                future_now.month,
-                                                future_now.day,
-                                                oh.from_hour.hour,
-                                                oh.from_hour.minute,
-                                                oh.from_hour.second,
-                                                tzinfo)
+                    tmp_now = datetime.datetime(
+                        future_now.year,
+                        future_now.month,
+                        future_now.day,
+                        oh.from_hour.hour,
+                        oh.from_hour.minute,
+                        oh.from_hour.second,
+                        tzinfo,
+                    )
                     if tmp_now < now:
                         tmp_now = now  # be sure to set the bound correctly...
                     if is_open(location, now=tmp_now):

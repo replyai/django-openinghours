@@ -30,7 +30,7 @@ To get the latest version from GitHub
 
 ::
 
-    pip install -e git+git://github.com/arteria/django-openinghours.git#egg=openinghours-master
+    pip install -e git+git://github.com/replyai/django-openinghours.git#egg=openinghours-master
 
 Add ``openinghours`` to your ``INSTALLED_APPS``
 

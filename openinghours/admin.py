@@ -16,9 +16,10 @@ class ClosingRulesInline(admin.StackedInline):
 
 class CompanyAdmin(admin.ModelAdmin):
     inlines = [OpeningHoursInline, ClosingRulesInline]
-    search_fields = ['name', 'slug']
+    search_fields = ["name", "slug"]
+
 
 # OPENINGHOURS_PREMISES_MODEL users need to register
 # their own admin from their app
-if PREMISES_MODEL == 'openinghours.Company':
+if PREMISES_MODEL == "openinghours.Company":
     admin.site.register(Company, CompanyAdmin)

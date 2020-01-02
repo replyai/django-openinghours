@@ -1,9 +1,6 @@
-import pytz
 from collections import OrderedDict
 
-from datetime import datetime
 from django.http import HttpResponseRedirect
-from django.utils.encoding import force_text
 from django.views.generic import DetailView, UpdateView
 
 from openinghours.forms import Slot, time_to_str, str_to_time
@@ -23,6 +20,7 @@ class OpeningHoursEditView(DetailView, UpdateView):
 
     Inspired by Google local opening hours UI and earlier works.
     """
+
     model = get_premises_model()
     template_name = "openinghours/edit_base.html"
     include_form_actions = True
@@ -43,7 +41,7 @@ class OpeningHoursEditView(DetailView, UpdateView):
             self.success_url = self.request.path_info
         if self.success_url:
             # Forcing possible reverse_lazy evaluation
-            url = force_text(self.success_url)
+            url = self.success_url
         else:
             url = self.request.path_info
         return url
@@ -74,30 +72,36 @@ class OpeningHoursEditView(DetailView, UpdateView):
                 ini1, ini2 = [None, None]
             else:
                 closed = False
-                ini = [{'opens': time_to_str(oh.from_hour),
-                        'shuts': time_to_str(oh.to_hour)}
-                       for oh in opening_hours[day_no]]
+                ini = [
+                    {
+                        "opens": time_to_str(oh.from_hour),
+                        "shuts": time_to_str(oh.to_hour),
+                    }
+                    for oh in opening_hours[day_no]
+                ]
                 ini += [None] * (2 - len(ini[:2]))  # pad
                 ini1, ini2 = ini[:2]  # trim
                 if ini2:
                     two_sets = True
-            days.append({
-                'name': day_name,
-                'number': day_no,
-                'slot1': Slot(prefix=self.form_prefix(day_no, 1), initial=ini1),
-                'slot2': Slot(prefix=self.form_prefix(day_no, 2), initial=ini2),
-                'closed': closed
-            })
-        context['days'] = days
-        context['two_sets'] = two_sets
-        context['location'] = self.object
-        context['include_form_actions'] = self.include_form_actions
+            days.append(
+                {
+                    "name": day_name,
+                    "number": day_no,
+                    "slot1": Slot(prefix=self.form_prefix(day_no, 1), initial=ini1),
+                    "slot2": Slot(prefix=self.form_prefix(day_no, 2), initial=ini2),
+                    "closed": closed,
+                }
+            )
+        context["days"] = days
+        context["two_sets"] = two_sets
+        context["location"] = self.object
+        context["include_form_actions"] = self.include_form_actions
         closing_rules_queryset = ClosingRules.objects.filter(company=self.object.pk)
         extra = 2
         if closing_rules_queryset.count() == 0:
             extra = 3
         formset = modelformset_factory(ClosingRules, ClosingRulesForm, extra=extra)
-        context['formset'] = formset(queryset=closing_rules_queryset)
+        context["formset"] = formset(queryset=closing_rules_queryset)
         return context
 
     def get(self, request, *args, **kwargs):
@@ -111,7 +115,7 @@ class OpeningHoursEditView(DetailView, UpdateView):
         """
         location = self.get_object()
         # open days, disabled widget data won't make it into request.POST
-        present_prefixes = [x.split('-')[0] for x in list(request.POST.keys())]
+        present_prefixes = [x.split("-")[0] for x in list(request.POST.keys())]
 
         day_forms = OrderedDict()
         for day_no, day_name in WEEKDAYS:
@@ -126,11 +130,13 @@ class OpeningHoursEditView(DetailView, UpdateView):
             OpeningHours.objects.filter(company=location).delete()
             for prefix, day_form in list(day_forms.items()):
                 day, form = day_form
-                opens, shuts = [str_to_time(form.cleaned_data[x])
-                                for x in ('opens', 'shuts')]
+                opens, shuts = [
+                    str_to_time(form.cleaned_data[x]) for x in ("opens", "shuts")
+                ]
                 if opens != shuts:
-                    OpeningHours(from_hour=opens, to_hour=shuts,
-                                 company=location, weekday=day).save()
+                    OpeningHours(
+                        from_hour=opens, to_hour=shuts, company=location, weekday=day
+                    ).save()
 
         # assume that forms are validated
         ClosingRulesFormSet = modelformset_factory(ClosingRules, ClosingRulesForm)
@@ -138,12 +144,16 @@ class OpeningHoursEditView(DetailView, UpdateView):
         for form in formset.forms:
             if form.is_valid():
                 closing_rule = form.save(commit=False)
-                closing_rule.start = construct_tz_aware_time(form.cleaned_data['start_date'],
-                                                                  form.cleaned_data['start_time'],
-                                                                  location.timezone)
-                closing_rule.end = construct_tz_aware_time(form.cleaned_data['end_date'],
-                                                                  form.cleaned_data['end_time'],
-                                                                  location.timezone)
+                closing_rule.start = construct_tz_aware_time(
+                    form.cleaned_data["start_date"],
+                    form.cleaned_data["start_time"],
+                    location.timezone,
+                )
+                closing_rule.end = construct_tz_aware_time(
+                    form.cleaned_data["end_date"],
+                    form.cleaned_data["end_time"],
+                    location.timezone,
+                )
                 closing_rule.company = location
                 closing_rule.save()
             elif form.is_bound:
@@ -153,5 +163,3 @@ class OpeningHoursEditView(DetailView, UpdateView):
         self.process_post(request)
         success_url = self.get_success_url()
         return HttpResponseRedirect(success_url)
-
-
