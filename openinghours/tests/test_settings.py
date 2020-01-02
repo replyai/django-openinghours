@@ -1,9 +1,10 @@
 """Settings that need to be set in order to run the tests."""
 import os
+from django.conf import settings
 
 DEBUG = True
-
 SITE_ID = 1
+TIME_ZONE = "Europe/London"
 
 APP_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 
@@ -17,6 +18,11 @@ STATIC_URL = "/static/"
 STATIC_ROOT = os.path.join(APP_ROOT, "../app_static")
 MEDIA_ROOT = os.path.join(APP_ROOT, "../app_media")
 STATICFILES_DIRS = (os.path.join(APP_ROOT, "static"),)
+MIDDLEWARE = [
+    "django.contrib.sessions.middleware.SessionMiddleware",
+    "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "django.contrib.messages.middleware.MessageMiddleware",
+]
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
@@ -55,7 +61,10 @@ INTERNAL_APPS = ["openinghours"]
 INSTALLED_APPS = EXTERNAL_APPS + INTERNAL_APPS
 
 # run coverage with
-# coverage run --source='.' manage.py test openinghours
+# coverage run --so urce='.' manage.py test openinghours
 # coverage report
 
 SECRET_KEY = "foobar"
+
+DEFAULT_MODEL = "openinghours.Company"
+OPENINGHOURS_PREMISES_MODEL = DEFAULT_MODEL

@@ -1,10 +1,10 @@
 # -*- encoding: utf-8 -*-
 from setuptools import setup, find_packages
-import openinghours as app
+import openinghours
 
 setup(
     name="django-openinghours",
-    version=app.__version__,
+    version=openinghours.__version__,
     description=open('DESCRIPTION').read(),
     long_description=open('README.rst').read(),
     license='The MIT License',
@@ -15,5 +15,5 @@ setup(
     url="https://github.com/arteria/django-openinghours",
     packages=find_packages(),
     include_package_data=True,
-    install_requires=['django', 'django-threadlocals', 'django-compat'],
+    install_requires=['django', 'django-threadlocals'],
 )

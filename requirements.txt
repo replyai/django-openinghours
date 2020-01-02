@@ -1,3 +1,2 @@
-django==1.8.5
+django
 django-threadlocals
-django-compat

@@ -3,15 +3,14 @@ import datetime
 import pytz
 from django.conf import settings
 from django.utils import timezone
+from django.apps import apps
+from django.core.exceptions import ImproperlyConfigured
 
 try:
     from threadlocals.threadlocals import get_current_request
 except ImportError:
     get_current_request = None
 from openinghours.models import OpeningHours, ClosingRules, PREMISES_MODEL
-from django.core.exceptions import ImproperlyConfigured
-
-from compat import get_model
 
 
 def get_premises_model():
@@ -25,7 +24,7 @@ def get_premises_model():
         raise ImproperlyConfigured(
             "OPENINGHOURS_PREMISES_MODEL must be of the" " form 'app_label.model_name'"
         )
-    premises_model = get_model(app_label=app_label, model_name=model_name)
+    premises_model = apps.get_model(app_label=app_label, model_name=model_name)
     if premises_model is None:
         raise ImproperlyConfigured(
             "OPENINGHOURS_PREMISES_MODEL refers to"
