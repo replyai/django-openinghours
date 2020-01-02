@@ -18,11 +18,13 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='closingrules',
             name='company',
-            field=models.ForeignKey(verbose_name='Company', to=PREMISES_MODEL),
+            field=models.ForeignKey(verbose_name='Company', to=PREMISES_MODEL,
+                                    on_delete=models.CASCADE),
         ),
         migrations.AlterField(
             model_name='openinghours',
             name='company',
-            field=models.ForeignKey(verbose_name='Company', to=PREMISES_MODEL),
+            field=models.ForeignKey(verbose_name='Company', to=PREMISES_MODEL,
+                                    on_delete=models.CASCADE),
         ),
     ]
