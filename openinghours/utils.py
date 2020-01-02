@@ -38,7 +38,7 @@ Company = get_premises_model()
 def to_timezone(time, tzinfo):
     if tzinfo is None:
         return time
-    if isinstance(tzinfo, (unicode, str)):
+    if isinstance(tzinfo, str):
         tzinfo = pytz.timezone(tzinfo)
     if time.tzinfo is None:
         time = time.utcnow().replace(tzinfo=timezone.UTC)

@@ -1,5 +1,6 @@
 *.egg-info/
 *.pyc
+*.bak
 *coverage/
 db.sqlite
 dist/

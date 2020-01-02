@@ -24,7 +24,7 @@ class OpeningHoursTestCase(TestCase):
         }
         self.company, created = Company.objects.get_or_create(name="Company Ltd.",
                                                          slug="company-ltd")
-        for day, hours in test_data.items():
+        for day, hours in list(test_data.items()):
             if not hours:
                 continue
             for slot in hours:

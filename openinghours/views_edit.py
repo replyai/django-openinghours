@@ -69,7 +69,7 @@ class OpeningHoursEditView(DetailView, UpdateView):
             opening_hours.setdefault(o.weekday, []).append(o)
         days = []
         for day_no, day_name in WEEKDAYS:
-            if day_no not in opening_hours.keys():
+            if day_no not in list(opening_hours.keys()):
                 closed = True
                 ini1, ini2 = [None, None]
             else:
@@ -111,7 +111,7 @@ class OpeningHoursEditView(DetailView, UpdateView):
         """
         location = self.get_object()
         # open days, disabled widget data won't make it into request.POST
-        present_prefixes = [x.split('-')[0] for x in request.POST.keys()]
+        present_prefixes = [x.split('-')[0] for x in list(request.POST.keys())]
 
         day_forms = OrderedDict()
         for day_no, day_name in WEEKDAYS:
@@ -122,9 +122,9 @@ class OpeningHoursEditView(DetailView, UpdateView):
                     continue
                 day_forms[prefix] = (day_no, Slot(request.POST, prefix=prefix))
 
-        if all([day_form[1].is_valid() for pre, day_form in day_forms.items()]):
+        if all([day_form[1].is_valid() for pre, day_form in list(day_forms.items())]):
             OpeningHours.objects.filter(company=location).delete()
-            for prefix, day_form in day_forms.items():
+            for prefix, day_form in list(day_forms.items()):
                 day, form = day_form
                 opens, shuts = [str_to_time(form.cleaned_data[x])
                                 for x in ('opens', 'shuts')]

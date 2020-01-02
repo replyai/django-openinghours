@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals
+
 
 from django.db import migrations, models
 from openinghours.app_settings import PREMISES_MODEL, DEFAULT_MODEL

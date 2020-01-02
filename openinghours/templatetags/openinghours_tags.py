@@ -34,7 +34,7 @@ def to_weekday(date_obj_tpl):
             return w[1]
 
 
-@register.assignment_tag
+@register.simple_tag
 def is_open(location=None, attr=None):
     """
     Returns False if the location is closed, or the OpeningHours object
@@ -48,7 +48,7 @@ def is_open(location=None, attr=None):
     return obj
 
 
-@register.assignment_tag
+@register.simple_tag
 def next_time_open(location):
     """
     Returns the next possible OpeningHours object, or False
@@ -130,7 +130,7 @@ def opening_hours(location=None, concise=False):
         concise_days = []
         current_set = {}
         for day in days:
-            if 'hours' not in current_set.keys():
+            if 'hours' not in list(current_set.keys()):
                 current_set = {'day_names': [day['name']],
                                'hours': day['hours']}
             elif day['hours'] != current_set['hours']:
