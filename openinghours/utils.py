@@ -141,8 +141,7 @@ def is_open(location, now=None, tzinfo=None):
             # print " 'Special' case after midnight", oh
 
         if is_open is not False:
-            return True
-
+            return oh
     return False
 
 
